@@ -13400,10 +13400,38 @@ void AddonRender() {
                 {
                     bool refreshDisabled = scanning || !hoardReady;
                     if (refreshDisabled) ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
-                    if (ImGui::Button("Refresh", ImVec2(-1, 0)) && !refreshDisabled) {
+                    // Name of the currently selected character (empty if none)
+                    std::string selRefreshName;
+                    if (g_SelectedCharIdx >= 0 && g_SelectedCharIdx < (int)g_CharDisplayOrder.size()) {
+                        int ri = g_CharDisplayOrder[g_SelectedCharIdx];
+                        if (ri >= 0 && ri < (int)characters.size()) selRefreshName = characters[ri].name;
+                    }
+                    const float multiBtnW = 28.0f;
+                    const float spacing = ImGui::GetStyle().ItemSpacing.x;
+                    float mainBtnW = ImGui::GetContentRegionAvail().x - multiBtnW - spacing;
+                    // Main button: refresh ONLY the selected character
+                    if (ImGui::Button("Refresh", ImVec2(mainBtnW, 0)) && !refreshDisabled) {
+                        if (!selRefreshName.empty()) {
+                            AlterEgo::GW2API::RequestCharacterRefreshSelected({ selRefreshName });
+                            g_DetailsFetched = false;
+                        } else {
+                            g_RefreshListFetching = true;
+                            AlterEgo::GW2API::RequestCharacterList();
+                        }
+                    }
+                    if (ImGui::IsItemHovered()) {
+                        ImGui::SetTooltip(selRefreshName.empty()
+                            ? "Load character list"
+                            : "Refresh only the selected character:\n%s", selRefreshName.c_str());
+                    }
+                    ImGui::SameLine();
+                    // "..." button: open the multi-character picker (old behavior)
+                    if (ImGui::Button("...##refreshMulti", ImVec2(multiBtnW, 0)) && !refreshDisabled) {
                         g_RefreshListFetching = true;
                         AlterEgo::GW2API::RequestCharacterList();
                     }
+                    if (ImGui::IsItemHovered())
+                        ImGui::SetTooltip("Choose several characters / all to refresh");
                     if (refreshDisabled) ImGui::PopStyleVar();
 
                     // Compact status line

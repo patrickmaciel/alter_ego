@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <mutex>
+#include <atomic>
 #include <functional>
 #include <nlohmann/json.hpp>
 #include "nexus/Nexus.h"
